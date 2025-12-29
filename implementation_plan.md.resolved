@@ -1,0 +1,236 @@
+# Cleaning Service Booking Application - Implementation Plan
+
+Membangun REST API backend + Frontend React terintegrasi dalam satu project Laravel untuk aplikasi booking jasa cleaning service.
+
+---
+
+## Proposed Changes
+
+### Phase 1: Backend - Package Installation
+
+#### Install Sanctum
+```bash
+composer require laravel/sanctum
+php artisan vendor:publish --provider="Laravel\Sanctum\SanctumServiceProvider"
+php artisan migrate
+```
+
+---
+
+### Phase 2: Backend - Models
+
+#### [MODIFY] [User.php](file:///c:/laragon/www/management-cleaning-service/app/Models/User.php)
+- Add `role` to fillable, add `HasApiTokens` trait
+- Relationships: `cleaner`, `bookings`
+- Helpers: `isAdmin()`, `isCustomer()`, `isCleaner()`
+
+#### [NEW] Models
+| Model | Relationships |
+|-------|--------------|
+| `Cleaner.php` | belongsTo user, hasMany bookings |
+| `Service.php` | hasMany bookings |
+| `Schedule.php` | hasMany bookings |
+| `Booking.php` | belongsTo user, service, schedule, cleaner |
+
+---
+
+### Phase 3: Backend - Middleware & Auth
+
+#### [NEW] [RoleMiddleware.php](file:///c:/laragon/www/management-cleaning-service/app/Http/Middleware/RoleMiddleware.php)
+- Role-based access control (admin, customer, cleaner)
+
+#### [NEW] Controllers
+```
+app/Http/Controllers/Api/
+├── AuthController.php (register, login, logout, me)
+├── Admin/
+│   ├── ServiceController.php
+│   ├── CleanerController.php
+│   ├── ScheduleController.php
+│   ├── BookingController.php
+│   └── DashboardController.php
+├── Customer/
+│   └── BookingController.php
+└── Cleaner/
+    └── BookingController.php
+```
+
+#### [NEW] Form Requests
+```
+app/Http/Requests/
+├── Auth/ (Register, Login)
+├── Service/ (Store, Update)
+├── Booking/ (Store, UpdateStatus)
+├── Cleaner/ (Store, Update)
+└── Schedule/ (Store, Update)
+```
+
+---
+
+### Phase 4: Backend - API Routes
+
+#### [NEW] [api.php](file:///c:/laragon/www/management-cleaning-service/routes/api.php)
+
+| Route Group | Endpoints |
+|-------------|-----------|
+| Public | `POST /register`, `POST /login`, `GET /services` |
+| Auth | `POST /logout`, `GET /me` |
+| Admin | `/admin/*` - Services, Cleaners, Schedules, Bookings, Dashboard |
+| Customer | `/customer/bookings` - Create & view bookings |
+| Cleaner | `/cleaner/bookings` - View & update status |
+
+---
+
+### Phase 5: Frontend Setup
+
+#### Install Dependencies
+```bash
+npm install react react-dom @types/react @types/react-dom typescript
+npm install antd @ant-design/icons
+npm install @tanstack/react-query axios
+npm install react-router-dom @types/react-router-dom
+npm install @vitejs/plugin-react
+```
+
+#### [MODIFY] [vite.config.js](file:///c:/laragon/www/management-cleaning-service/vite.config.js)
+- Add React plugin
+- Change entry to `resources/js/app.tsx`
+
+#### [MODIFY] [package.json](file:///c:/laragon/www/management-cleaning-service/package.json)
+- Add React & TypeScript dependencies
+
+#### [NEW] [tsconfig.json](file:///c:/laragon/www/management-cleaning-service/tsconfig.json)
+- TypeScript configuration
+
+---
+
+### Phase 6: Frontend Structure
+
+```
+resources/js/
+├── app.tsx                 # Entry point
+├── types/                  # TypeScript types
+│   └── index.ts
+├── api/                    # API services
+│   ├── axios.ts
+│   ├── auth.ts
+│   ├── services.ts
+│   ├── bookings.ts
+│   └── dashboard.ts
+├── components/             # Reusable components
+│   ├── Layout/
+│   │   ├── AdminLayout.tsx
+│   │   ├── CustomerLayout.tsx
+│   │   └── CleanerLayout.tsx
+│   ├── ProtectedRoute.tsx
+│   └── common/
+├── pages/
+│   ├── Auth/
+│   │   ├── Login.tsx
+│   │   └── Register.tsx
+│   ├── Admin/
+│   │   ├── Dashboard.tsx
+│   │   ├── Services/
+│   │   ├── Cleaners/
+│   │   ├── Schedules/
+│   │   └── Bookings/
+│   ├── Customer/
+│   │   ├── Home.tsx
+│   │   ├── ServiceList.tsx
+│   │   ├── BookingForm.tsx
+│   │   └── MyBookings.tsx
+│   └── Cleaner/
+│       ├── MySchedule.tsx
+│       └── BookingDetail.tsx
+└── hooks/
+    └── useAuth.ts
+```
+
+---
+
+### Phase 7: Frontend Pages
+
+#### Auth Pages
+| Page | Features |
+|------|----------|
+| Login | Email/password form, role-based redirect |
+| Register | Customer registration form |
+
+#### Admin Pages
+| Page | Features |
+|------|----------|
+| Dashboard | Statistics cards (total orders, completed, pending, revenue) |
+| Services | CRUD table with Ant Design Table |
+| Cleaners | CRUD with user creation |
+| Schedules | Calendar/table view |
+| Bookings | List with status filter, approve/cancel, assign cleaner |
+
+#### Customer Pages
+| Page | Features |
+|------|----------|
+| Home | Hero, service overview |
+| ServiceList | Browse available services |
+| BookingForm | Select service, schedule, enter address |
+| MyBookings | Booking history with status |
+
+#### Cleaner Pages
+| Page | Features |
+|------|----------|
+| MySchedule | Assigned bookings calendar |
+| BookingDetail | Update status (On Progress → Completed) |
+
+---
+
+### Phase 8: Laravel Blade Integration
+
+#### [MODIFY] [welcome.blade.php](file:///c:/laragon/www/management-cleaning-service/resources/views/welcome.blade.php)
+- Single React mount point
+
+#### [NEW] [app.blade.php](file:///c:/laragon/www/management-cleaning-service/resources/views/app.blade.php)
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    @viteReactRefresh
+    @vite(['resources/css/app.css', 'resources/js/app.tsx'])
+</head>
+<body>
+    <div id="app"></div>
+</body>
+</html>
+```
+
+#### [MODIFY] [web.php](file:///c:/laragon/www/management-cleaning-service/routes/web.php)
+- SPA fallback route for React Router
+
+---
+
+## Verification Plan
+
+### Backend Testing
+```bash
+# Run migrations
+php artisan migrate
+
+# Test auth endpoints
+curl -X POST http://localhost:8000/api/register -d '{...}'
+curl -X POST http://localhost:8000/api/login -d '{...}'
+```
+
+### Frontend Testing
+```bash
+# Start development server
+npm run dev
+php artisan serve
+
+# Access: http://localhost:8000
+# Test login, booking flow, admin panel
+```
+
+### Checklist
+- [ ] Register/Login working
+- [ ] Role-based redirect
+- [ ] Admin CRUD operations
+- [ ] Customer booking flow
+- [ ] Cleaner status update
+- [ ] Dashboard statistics
