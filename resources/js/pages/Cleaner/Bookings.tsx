@@ -174,7 +174,8 @@ export function CleanerBookings() {
                         </Popconfirm>
                     );
                 }
-                return null;
+
+                return "-";
             },
         },
     ];

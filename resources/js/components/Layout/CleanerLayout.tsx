@@ -1,5 +1,5 @@
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
-import { Layout, Menu, Avatar, Dropdown, theme } from "antd";
+import { Layout, Avatar, Dropdown, theme } from "antd";
 import {
     CalendarOutlined,
     FileTextOutlined,
@@ -68,25 +68,42 @@ export function CleanerLayout() {
                         "linear-gradient(90deg, #065f46 0%, #10b981 100%)",
                 }}
             >
-                <div className="flex items-center gap-8">
-                    <h1 className="text-white font-bold text-xl m-0">
+                <div className="flex items-center gap-8 flex-1 min-w-0">
+                    <h1 className="text-white font-bold text-xl m-0 flex-shrink-0">
                         CleanService - Cleaner
                     </h1>
-                    <Menu
-                        mode="horizontal"
-                        selectedKeys={[location.pathname]}
-                        items={menuItems}
-                        onClick={handleMenuClick}
-                        className="!bg-transparent !border-none"
-                        theme="dark"
-                    />
+                    <div className="flex items-center gap-4 flex-1">
+                        {menuItems.map((item) => {
+                            const isActive = location.pathname === item.key;
+                            return (
+                                <div
+                                    key={item.key}
+                                    onClick={() =>
+                                        handleMenuClick({ key: item.key })
+                                    }
+                                    className={`
+                                        flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer transition-all duration-200
+                                        ${
+                                            isActive
+                                                ? "bg-emerald-300 text-emerald-900 shadow-md"
+                                                : "text-white hover:bg-emerald-700/50"
+                                        }
+                                    `}
+                                    style={{ lineHeight: "normal" }}
+                                >
+                                    <span>{item.icon}</span>
+                                    <span className="font-medium">{item.label}</span>
+                                </div>
+                            );
+                        })}
+                    </div>
                 </div>
                 <Dropdown
                     menu={{ items: dropdownItems }}
                     placement="bottomRight"
                 >
                     <Avatar
-                        className="cursor-pointer bg-white text-green-600"
+                        className="cursor-pointer bg-white text-green-600 hover:bg-emerald-50 transition-colors"
                         icon={<UserOutlined />}
                     />
                 </Dropdown>
