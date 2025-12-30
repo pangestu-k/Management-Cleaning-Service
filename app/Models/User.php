@@ -64,4 +64,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Booking::class);
     }
+
+    public function profilePhoto(): HasOne
+    {
+        return $this->hasOne(ProfilePhoto::class);
+    }
 }

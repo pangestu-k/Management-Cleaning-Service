@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Customer;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Booking\StoreBookingRequest;
+use App\Http\Requests\Booking\SubmitComplaintRequest;
 use App\Models\Booking;
 use App\Models\Schedule;
 use App\Models\Service;
@@ -145,6 +146,40 @@ class BookingController extends Controller
         return response()->json([
             'success' => true,
             'data' => $schedules,
+        ]);
+    }
+
+    /**
+     * Submit complaint for completed booking
+     */
+    public function submitComplaint(SubmitComplaintRequest $request, int $id): JsonResponse
+    {
+        $booking = Booking::with(['service', 'schedule', 'cleaner.user'])
+            ->forUser($request->user()->id)
+            ->find($id);
+
+        if (!$booking) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Booking tidak ditemukan.',
+            ], 404);
+        }
+
+        if ($booking->status !== Booking::STATUS_COMPLETED) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hanya booking dengan status "Completed" yang dapat dikeluhkan.',
+            ], 422);
+        }
+
+        $booking->update([
+            'customer_complaint' => $request->customer_complaint,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Keluhan berhasil dikirim. Admin akan meninjau keluhan Anda.',
+            'data' => $booking->load(['service', 'schedule', 'cleaner.user']),
         ]);
     }
 }

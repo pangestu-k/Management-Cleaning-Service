@@ -88,6 +88,8 @@ export interface Booking {
     cleaner_id?: number;
     address: string;
     status: BookingStatus;
+    evidence_cleaner?: string;
+    customer_complaint?: string;
     total_price: number;
     user?: User;
     service?: Service;

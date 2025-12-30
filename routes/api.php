@@ -62,6 +62,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/bookings', [CustomerBookingController::class, 'index']);
         Route::post('/bookings', [CustomerBookingController::class, 'store']);
         Route::get('/bookings/{id}', [CustomerBookingController::class, 'show']);
+        Route::post('/bookings/{id}/complaint', [CustomerBookingController::class, 'submitComplaint']);
     });
 
     // Cleaner routes
@@ -73,5 +74,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/bookings', [CleanerBookingController::class, 'index']);
         Route::get('/bookings/{id}', [CleanerBookingController::class, 'show']);
         Route::put('/bookings/{id}/status', [CleanerBookingController::class, 'updateStatus']);
+        Route::post('/bookings/{id}/evidence', [CleanerBookingController::class, 'uploadEvidence']);
     });
 });

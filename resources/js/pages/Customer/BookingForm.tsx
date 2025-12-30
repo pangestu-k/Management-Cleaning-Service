@@ -17,6 +17,7 @@ import {
     CalendarOutlined,
     EnvironmentOutlined,
     CheckCircleOutlined,
+    CheckOutlined,
 } from "@ant-design/icons";
 import { servicesApi } from "../../api/services";
 import { schedulesApi } from "../../api/schedules";
@@ -163,41 +164,73 @@ export function BookingForm() {
                             <Empty description="Tidak ada jadwal tersedia" />
                         ) : (
                             <div className="space-y-2">
-                                {schedules.map((schedule: Schedule) => (
-                                    <Card
-                                        key={schedule.id}
-                                        size="small"
-                                        className={`cursor-pointer transition-all ${
-                                            selectedSchedule === schedule.id
-                                                ? "border-blue-500 bg-blue-50"
-                                                : "hover:border-blue-300"
-                                        }`}
-                                        onClick={() =>
-                                            setSelectedSchedule(schedule.id)
-                                        }
-                                    >
-                                        <div className="flex justify-between items-center">
-                                            <div>
-                                                <span className="font-semibold">
-                                                    {dayjs(
-                                                        schedule.date
-                                                    ).format(
-                                                        "dddd, DD MMM YYYY"
+                                {schedules.map((schedule: Schedule) => {
+                                    const isSelected =
+                                        selectedSchedule === schedule.id;
+                                    return (
+                                        <Card
+                                            key={schedule.id}
+                                            size="small"
+                                            className={`cursor-pointer transition-all ${
+                                                isSelected
+                                                    ? "border-2 border-blue-500 bg-blue-50 shadow-md"
+                                                    : "border border-gray-200 hover:border-blue-300 hover:bg-blue-50/50"
+                                            }`}
+                                            onClick={() =>
+                                                setSelectedSchedule(schedule.id)
+                                            }
+                                        >
+                                            <div className="flex justify-between items-center">
+                                                <div className="flex items-center gap-3">
+                                                    {isSelected && (
+                                                        <CheckOutlined className="text-blue-500 text-lg" />
                                                     )}
-                                                </span>
-                                                <span className="ml-4 text-gray-500">
-                                                    {schedule.start_time} -{" "}
-                                                    {schedule.end_time}
-                                                </span>
+                                                    <div>
+                                                        <span
+                                                            className={`font-semibold ${
+                                                                isSelected
+                                                                    ? "text-blue-700"
+                                                                    : "text-gray-800"
+                                                            }`}
+                                                        >
+                                                            {dayjs(
+                                                                schedule.date
+                                                            ).format(
+                                                                "dddd, DD MMM YYYY"
+                                                            )}
+                                                        </span>
+                                                        <span
+                                                            className={`ml-4 ${
+                                                                isSelected
+                                                                    ? "text-blue-600"
+                                                                    : "text-gray-500"
+                                                            }`}
+                                                        >
+                                                            {
+                                                                schedule.start_time
+                                                            }{" "}
+                                                            -{" "}
+                                                            {schedule.end_time}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <Tag
+                                                    color={
+                                                        isSelected
+                                                            ? "blue"
+                                                            : "green"
+                                                    }
+                                                >
+                                                    Tersedia{" "}
+                                                    {
+                                                        schedule.remaining_capacity
+                                                    }{" "}
+                                                    slot
+                                                </Tag>
                                             </div>
-                                            <Tag color="green">
-                                                Tersedia{" "}
-                                                {schedule.remaining_capacity}{" "}
-                                                slot
-                                            </Tag>
-                                        </div>
-                                    </Card>
-                                ))}
+                                        </Card>
+                                    );
+                                })}
                             </div>
                         )}
                     </div>

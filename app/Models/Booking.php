@@ -17,6 +17,8 @@ class Booking extends Model
         'cleaner_id',
         'address',
         'status',
+        'evidence_cleaner',
+        'customer_complaint',
         'total_price',
     ];
 

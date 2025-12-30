@@ -18,6 +18,11 @@ export const bookingsApi = {
             const response = await api.post<ApiResponse<Booking>>('/customer/bookings', data);
             return response.data;
         },
+
+        submitComplaint: async (id: number, complaint: string): Promise<ApiResponse<Booking>> => {
+            const response = await api.post<ApiResponse<Booking>>(`/customer/bookings/${id}/complaint`, { customer_complaint: complaint });
+            return response.data;
+        },
     },
 
     // Admin endpoints
@@ -55,8 +60,17 @@ export const bookingsApi = {
             return response.data;
         },
 
-        updateStatus: async (id: number, status: 'on_progress' | 'completed'): Promise<ApiResponse<Booking>> => {
-            const response = await api.put<ApiResponse<Booking>>(`/cleaner/bookings/${id}/status`, { status });
+        updateStatus: async (id: number, status: 'on_progress' | 'completed', evidence?: string): Promise<ApiResponse<Booking>> => {
+            const payload: { status: string; evidence_cleaner?: string } = { status };
+            if (evidence) {
+                payload.evidence_cleaner = evidence;
+            }
+            const response = await api.put<ApiResponse<Booking>>(`/cleaner/bookings/${id}/status`, payload);
+            return response.data;
+        },
+
+        uploadEvidence: async (id: number, evidence: string): Promise<ApiResponse<Booking>> => {
+            const response = await api.post<ApiResponse<Booking>>(`/cleaner/bookings/${id}/evidence`, { evidence_cleaner: evidence });
             return response.data;
         },
 

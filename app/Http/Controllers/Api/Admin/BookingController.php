@@ -63,6 +63,7 @@ class BookingController extends Controller
 
     /**
      * Update booking status (Admin)
+     * Admin can change status from completed to on_progress if there's a complaint
      */
     public function updateStatus(UpdateBookingStatusRequest $request, int $id): JsonResponse
     {
@@ -73,6 +74,16 @@ class BookingController extends Controller
                 'success' => false,
                 'message' => 'Booking tidak ditemukan.',
             ], 404);
+        }
+
+        // If changing from completed to on_progress, check if there's a complaint
+        if ($booking->status === Booking::STATUS_COMPLETED && $request->status === Booking::STATUS_ON_PROGRESS) {
+            if (empty($booking->customer_complaint)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tidak dapat mengubah status dari Completed ke On Progress tanpa keluhan customer.',
+                ], 422);
+            }
         }
 
         $booking->update([

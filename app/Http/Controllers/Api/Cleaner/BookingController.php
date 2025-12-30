@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Cleaner;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Booking\UpdateBookingStatusRequest;
+use App\Http\Requests\Booking\UploadEvidenceRequest;
 use App\Models\Booking;
 use App\Models\Cleaner;
 use Illuminate\Http\JsonResponse;
@@ -122,13 +123,72 @@ class BookingController extends Controller
             ], 422);
         }
 
-        $booking->update([
+        // If changing to completed, require evidence
+        if ($request->status === Booking::STATUS_COMPLETED) {
+            if (empty($booking->evidence_cleaner) && !$request->has('evidence_cleaner')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Evidence wajib diupload terlebih dahulu sebelum menyelesaikan booking.',
+                ], 422);
+            }
+        }
+
+        $updateData = [
             'status' => $request->status,
-        ]);
+        ];
+
+        // If changing to completed and evidence is provided, save it
+        if ($request->status === Booking::STATUS_COMPLETED && $request->has('evidence_cleaner')) {
+            $updateData['evidence_cleaner'] = $request->evidence_cleaner;
+        }
+
+        $booking->update($updateData);
 
         return response()->json([
             'success' => true,
             'message' => 'Status booking berhasil diperbarui.',
+            'data' => $booking->load(['user', 'service', 'schedule']),
+        ]);
+    }
+
+    /**
+     * Upload evidence for completed booking
+     */
+    public function uploadEvidence(UploadEvidenceRequest $request, int $id): JsonResponse
+    {
+        $user = $request->user();
+        $cleaner = Cleaner::where('user_id', $user->id)->first();
+
+        if (!$cleaner) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Profil cleaner tidak ditemukan.',
+            ], 404);
+        }
+
+        $booking = Booking::forCleaner($cleaner->id)->find($id);
+
+        if (!$booking) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Booking tidak ditemukan.',
+            ], 404);
+        }
+
+        if ($booking->status !== Booking::STATUS_ON_PROGRESS) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hanya booking dengan status "On Progress" yang dapat mengupload evidence.',
+            ], 422);
+        }
+
+        $booking->update([
+            'evidence_cleaner' => $request->evidence_cleaner,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Evidence berhasil diupload.',
             'data' => $booking->load(['user', 'service', 'schedule']),
         ]);
     }
