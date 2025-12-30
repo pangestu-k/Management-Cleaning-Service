@@ -28,6 +28,7 @@ import { Home } from "./pages/Customer/Home";
 import { ServiceList } from "./pages/Customer/ServiceList";
 import { BookingForm } from "./pages/Customer/BookingForm";
 import { MyBookings } from "./pages/Customer/MyBookings";
+import { BookingDetail } from "./pages/Customer/BookingDetail";
 
 // Cleaner Pages
 import { CleanerBookings } from "./pages/Cleaner/Bookings";
@@ -101,6 +102,10 @@ function App() {
                                 <Route
                                     path="bookings"
                                     element={<MyBookings />}
+                                />
+                                <Route
+                                    path="bookings/:id"
+                                    element={<BookingDetail />}
                                 />
                             </Route>
 
