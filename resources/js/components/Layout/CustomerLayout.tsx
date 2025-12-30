@@ -1,5 +1,5 @@
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
-import { Layout, Menu, Avatar, Dropdown, theme } from "antd";
+import { Layout, Avatar, Dropdown, theme } from "antd";
 import {
     HomeOutlined,
     AppstoreOutlined,
@@ -13,7 +13,7 @@ import type { MenuProps } from "antd";
 const { Header, Content, Footer } = Layout;
 
 export function CustomerLayout() {
-    const { user, logout } = useAuth();
+    const { logout } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
     const {
@@ -51,8 +51,8 @@ export function CustomerLayout() {
         {
             key: "profile",
             icon: <UserOutlined />,
-            label: user?.name,
-            disabled: true,
+            label: "Profil",
+            onClick: () => navigate("/customer/profile"),
         },
         {
             type: "divider",
@@ -84,15 +84,18 @@ export function CustomerLayout() {
                             return (
                                 <div
                                     key={item.key}
-                                    onClick={() => handleMenuClick({ key: item.key })}
+                                    onClick={() =>
+                                        handleMenuClick({ key: item.key })
+                                    }
                                     className={`
                                         flex items-center gap-2 px-4 py-2 rounded cursor-pointer transition-colors
-                                        ${isActive 
-                                            ? 'bg-blue-400 text-white' 
-                                            : 'text-white hover:bg-blue-700'
+                                        ${
+                                            isActive
+                                                ? "bg-blue-400 text-white"
+                                                : "text-white hover:bg-blue-700"
                                         }
                                     `}
-                                    style={{ lineHeight: 'normal' }}
+                                    style={{ lineHeight: "normal" }}
                                 >
                                     <span>{item.icon}</span>
                                     <span>{item.label}</span>

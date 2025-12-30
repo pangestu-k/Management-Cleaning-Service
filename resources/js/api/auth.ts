@@ -25,4 +25,14 @@ export const authApi = {
         const response = await api.get<ApiResponse<{ user: User }>>('/me');
         return response.data;
     },
+
+    updateProfile: async (data: {
+        name?: string;
+        email?: string;
+        password?: string;
+        current_password?: string;
+    }): Promise<ApiResponse<{ user: User }>> => {
+        const response = await api.put<ApiResponse<{ user: User }>>('/profile', data);
+        return response.data;
+    },
 };

@@ -22,6 +22,7 @@ import { Services } from "./pages/Admin/Services";
 import { Cleaners } from "./pages/Admin/Cleaners";
 import { Schedules } from "./pages/Admin/Schedules";
 import { Bookings as AdminBookings } from "./pages/Admin/Bookings";
+import { Profile } from "./pages/Profile";
 
 // Customer Pages
 import { Home } from "./pages/Customer/Home";
@@ -79,6 +80,7 @@ function App() {
                                     path="bookings"
                                     element={<AdminBookings />}
                                 />
+                                <Route path="profile" element={<Profile />} />
                             </Route>
 
                             {/* Customer Routes */}
@@ -107,6 +109,7 @@ function App() {
                                     path="bookings/:id"
                                     element={<BookingDetail />}
                                 />
+                                <Route path="profile" element={<Profile />} />
                             </Route>
 
                             {/* Cleaner Routes */}
@@ -123,6 +126,7 @@ function App() {
                                     path="bookings"
                                     element={<CleanerBookings />}
                                 />
+                                <Route path="profile" element={<Profile />} />
                             </Route>
 
                             {/* Default redirect */}

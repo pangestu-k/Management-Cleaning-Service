@@ -67,8 +67,8 @@ export function AdminLayout() {
         {
             key: "profile",
             icon: <UserOutlined />,
-            label: user?.name,
-            disabled: true,
+            label: "Profil",
+            onClick: () => navigate("/admin/profile"),
         },
         {
             type: "divider",

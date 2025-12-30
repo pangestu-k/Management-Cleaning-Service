@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Requests\Auth\RegisterAdminRequest;
+use App\Http\Requests\Auth\UpdateProfileRequest;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -108,10 +109,65 @@ class AuthController extends Controller
      */
     public function me(Request $request): JsonResponse
     {
+        $user = $request->user();
+        
+        // Load relationships based on role
+        if ($user->role === User::ROLE_CLEANER) {
+            $user->load('cleaner');
+        }
+
         return response()->json([
             'success' => true,
             'data' => [
-                'user' => $request->user(),
+                'user' => $user,
+            ],
+        ]);
+    }
+
+    /**
+     * Update user profile
+     */
+    public function updateProfile(UpdateProfileRequest $request): JsonResponse
+    {
+        $user = $request->user();
+
+        // Verify current password if changing password
+        if ($request->has('password')) {
+            if (!Hash::check($request->current_password, $user->password)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Password lama tidak sesuai.',
+                ], 422);
+            }
+        }
+
+        // Update user data
+        $updateData = [];
+        if ($request->has('name')) {
+            $updateData['name'] = $request->name;
+        }
+        if ($request->has('email')) {
+            $updateData['email'] = $request->email;
+        }
+        if ($request->has('password') && $request->password) {
+            $updateData['password'] = Hash::make($request->password);
+        }
+
+        if (!empty($updateData)) {
+            $user->update($updateData);
+        }
+
+        // Reload user with relationships
+        $user->refresh();
+        if ($user->role === User::ROLE_CLEANER) {
+            $user->load('cleaner');
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Profil berhasil diperbarui.',
+            'data' => [
+                'user' => $user,
             ],
         ]);
     }

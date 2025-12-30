@@ -45,8 +45,8 @@ export function CleanerLayout() {
         {
             key: "profile",
             icon: <UserOutlined />,
-            label: user?.name,
-            disabled: true,
+            label: "Profil",
+            onClick: () => navigate("/cleaner/profile"),
         },
         {
             type: "divider",
