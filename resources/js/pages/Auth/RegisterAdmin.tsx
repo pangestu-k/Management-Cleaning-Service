@@ -1,7 +1,21 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Form, Input, Button, Card, Typography, message, Divider, Alert } from "antd";
-import { UserOutlined, LockOutlined, MailOutlined, SafetyOutlined } from "@ant-design/icons";
+import {
+    Form,
+    Input,
+    Button,
+    Card,
+    Typography,
+    message,
+    Divider,
+    Alert,
+} from "antd";
+import {
+    UserOutlined,
+    LockOutlined,
+    MailOutlined,
+    SafetyOutlined,
+} from "@ant-design/icons";
 import { useAuth } from "../../hooks/useAuth";
 
 const { Title, Text } = Typography;
@@ -67,8 +81,10 @@ export function RegisterAdmin() {
                     description="Anda memerlukan admin secret key untuk membuat akun admin. Hubungi administrator sistem untuk mendapatkan secret key."
                     type="warning"
                     showIcon
-                    className="mb-6"
+                    className="mb-8"
                 />
+
+                <br />
 
                 <Form
                     name="registerAdmin"
@@ -159,7 +175,9 @@ export function RegisterAdmin() {
                         ]}
                     >
                         <Input.Password
-                            prefix={<SafetyOutlined className="text-gray-400" />}
+                            prefix={
+                                <SafetyOutlined className="text-gray-400" />
+                            }
                             placeholder="Admin Secret Key"
                         />
                     </Form.Item>
@@ -204,4 +222,3 @@ export function RegisterAdmin() {
         </div>
     );
 }
-

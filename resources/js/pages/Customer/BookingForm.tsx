@@ -21,6 +21,7 @@ import {
 import { servicesApi } from "../../api/services";
 import { schedulesApi } from "../../api/schedules";
 import { bookingsApi } from "../../api/bookings";
+import { formatCurrency } from "../../utils/format";
 import type { Service, Schedule, BookingFormData } from "../../types";
 import dayjs from "dayjs";
 
@@ -49,7 +50,7 @@ export function BookingForm() {
     const createBookingMutation = useMutation({
         mutationFn: (data: BookingFormData) =>
             bookingsApi.customer.create(data),
-        onSuccess: (response) => {
+        onSuccess: () => {
             message.success("Booking berhasil dibuat!");
             navigate("/customer/bookings");
         },
@@ -110,6 +111,8 @@ export function BookingForm() {
 
             <Steps current={currentStep} items={steps} className="mb-8" />
 
+            <br />
+
             <Card className="shadow-md">
                 {/* Step 1: Select Service */}
                 {currentStep === 0 && (
@@ -136,11 +139,9 @@ export function BookingForm() {
                                     >
                                         <div className="flex justify-between">
                                             <span>{service.name}</span>
+                                            &nbsp;&nbsp;
                                             <span className="text-green-600">
-                                                Rp{" "}
-                                                {service.price?.toLocaleString(
-                                                    "id-ID"
-                                                )}
+                                                {formatCurrency(service.price)}
                                             </span>
                                         </div>
                                     </Select.Option>

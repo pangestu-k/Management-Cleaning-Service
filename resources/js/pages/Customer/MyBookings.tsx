@@ -1,9 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
-import { Table, Tag, Card, Empty, Spin, Button } from "antd";
-import { SyncOutlined } from "@ant-design/icons";
+import { Card, Row, Col, Tag, Empty, Spin, Button } from "antd";
+import { 
+    SyncOutlined, 
+    CalendarOutlined, 
+    DollarOutlined,
+    ClockCircleOutlined 
+} from "@ant-design/icons";
 import { bookingsApi } from "../../api/bookings";
+import { formatCurrency } from "../../utils/format";
 import type { Booking } from "../../types";
-import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import { useNavigate } from "react-router-dom";
 
@@ -31,71 +36,6 @@ export function MyBookings() {
         queryFn: () => bookingsApi.customer.getAll(),
     });
 
-    const columns: ColumnsType<Booking> = [
-        {
-            title: "Kode Booking",
-            dataIndex: "booking_code",
-            key: "booking_code",
-            render: (code: string) => (
-                <span className="font-mono font-semibold text-blue-600">
-                    {code}
-                </span>
-            ),
-        },
-        {
-            title: "Layanan",
-            dataIndex: ["service", "name"],
-            key: "service",
-        },
-        {
-            title: "Jadwal",
-            key: "schedule",
-            render: (_, record) => (
-                <span>
-                    {dayjs(record.schedule?.date).format("DD MMM YYYY")}
-                    <br />
-                    <span className="text-gray-500 text-sm">
-                        {record.schedule?.start_time} -{" "}
-                        {record.schedule?.end_time}
-                    </span>
-                </span>
-            ),
-        },
-        {
-            title: "Status",
-            dataIndex: "status",
-            key: "status",
-            render: (status: string) => (
-                <Tag
-                    color={statusColors[status]}
-                    icon={
-                        status === "on_progress" ? (
-                            <SyncOutlined spin />
-                        ) : undefined
-                    }
-                >
-                    {statusLabels[status]}
-                </Tag>
-            ),
-        },
-        {
-            title: "Total",
-            dataIndex: "total_price",
-            key: "total_price",
-            render: (price: number) => (
-                <span className="font-semibold text-green-600">
-                    Rp {price?.toLocaleString("id-ID")}
-                </span>
-            ),
-        },
-        {
-            title: "Tanggal Order",
-            dataIndex: "created_at",
-            key: "created_at",
-            render: (date: string) => dayjs(date).format("DD MMM YYYY HH:mm"),
-        },
-    ];
-
     if (isLoading) {
         return (
             <div className="flex justify-center items-center h-64">
@@ -108,15 +48,7 @@ export function MyBookings() {
 
     return (
         <div>
-            <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold">Pesanan Saya</h1>
-                <Button
-                    type="primary"
-                    onClick={() => navigate("/customer/services")}
-                >
-                    Buat Pesanan Baru
-                </Button>
-            </div>
+            <h1 className="text-2xl font-bold mb-6">Pesanan Saya</h1>
 
             {bookings.length === 0 ? (
                 <Card>
@@ -133,15 +65,72 @@ export function MyBookings() {
                     </Empty>
                 </Card>
             ) : (
-                <Table
-                    columns={columns}
-                    dataSource={bookings}
-                    rowKey="id"
-                    pagination={{
-                        total: data?.data?.total,
-                        pageSize: data?.data?.per_page,
-                    }}
-                />
+                <Row gutter={[16, 16]}>
+                    {bookings.map((booking: Booking) => (
+                        <Col xs={24} sm={12} lg={8} key={booking.id}>
+                            <Card
+                                className="h-full shadow-md hover:shadow-xl transition-all hover:-translate-y-1"
+                                actions={[
+                                    <Button
+                                        type="link"
+                                        onClick={() => navigate(`/customer/bookings/${booking.id}`)}
+                                    >
+                                        Lihat Detail
+                                    </Button>,
+                                ]}
+                            >
+                                <div className="mb-3">
+                                    <span className="font-mono font-semibold text-blue-600 text-lg">
+                                        {booking.booking_code}
+                                    </span>
+                                </div>
+                                
+                                <h3 className="text-lg font-bold mb-2">
+                                    {booking.service?.name || "Layanan"}
+                                </h3>
+                                
+                                <div className="mb-3">
+                                    <Tag
+                                        color={statusColors[booking.status]}
+                                        icon={
+                                            booking.status === "on_progress" ? (
+                                                <SyncOutlined spin />
+                                            ) : undefined
+                                        }
+                                        className="mb-2"
+                                    >
+                                        {statusLabels[booking.status]}
+                                    </Tag>
+                                </div>
+
+                                <div className="space-y-2 mb-4">
+                                    <div className="flex items-center text-gray-600">
+                                        <CalendarOutlined className="mr-2" />
+                                        <span className="text-sm">
+                                            {dayjs(booking.schedule?.date).format("DD MMM YYYY")}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center text-gray-600">
+                                        <ClockCircleOutlined className="mr-2" />
+                                        <span className="text-sm">
+                                            {booking.schedule?.start_time} - {booking.schedule?.end_time}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center">
+                                        <DollarOutlined className="mr-2 text-green-600" />
+                                        <span className="font-semibold text-green-600">
+                                            {formatCurrency(booking.total_price)}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div className="text-xs text-gray-400 border-t pt-2">
+                                    Order: {dayjs(booking.created_at).format("DD MMM YYYY HH:mm")}
+                                </div>
+                            </Card>
+                        </Col>
+                    ))}
+                </Row>
             )}
         </div>
     );

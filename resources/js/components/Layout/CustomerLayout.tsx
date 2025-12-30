@@ -74,19 +74,32 @@ export function CustomerLayout() {
                         "linear-gradient(90deg, #1e3a8a 0%, #3b82f6 100%)",
                 }}
             >
-                <div className="flex items-center gap-8">
-                    <h1 className="text-white font-bold text-xl m-0">
+                <div className="flex items-center gap-8 flex-1 min-w-0">
+                    <h1 className="text-white font-bold text-xl m-0 flex-shrink-0">
                         CleanService
                     </h1>
-                    <Menu
-                        mode="horizontal"
-                        selectedKeys={[location.pathname]}
-                        items={menuItems}
-                        onClick={handleMenuClick}
-                        className="!bg-transparent !border-none flex-1"
-                        style={{ minWidth: 300 }}
-                        theme="dark"
-                    />
+                    <div className="flex items-center gap-4 flex-1">
+                        {menuItems.map((item) => {
+                            const isActive = location.pathname === item.key;
+                            return (
+                                <div
+                                    key={item.key}
+                                    onClick={() => handleMenuClick({ key: item.key })}
+                                    className={`
+                                        flex items-center gap-2 px-4 py-2 rounded cursor-pointer transition-colors
+                                        ${isActive 
+                                            ? 'bg-blue-400 text-white' 
+                                            : 'text-white hover:bg-blue-700'
+                                        }
+                                    `}
+                                    style={{ lineHeight: 'normal' }}
+                                >
+                                    <span>{item.icon}</span>
+                                    <span>{item.label}</span>
+                                </div>
+                            );
+                        })}
+                    </div>
                 </div>
                 <Dropdown
                     menu={{ items: dropdownItems }}

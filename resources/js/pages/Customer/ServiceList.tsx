@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, Row, Col, Button, Tag, Spin, Empty } from "antd";
 import { ClockCircleOutlined, DollarOutlined } from "@ant-design/icons";
 import { servicesApi } from "../../api/services";
+import { formatCurrency } from "../../utils/format";
 import type { Service } from "../../types";
 
 export function ServiceList() {
@@ -58,7 +59,7 @@ export function ServiceList() {
                             </p>
                             <div className="flex justify-between items-center">
                                 <Tag color="green" icon={<DollarOutlined />}>
-                                    Rp {service.price?.toLocaleString("id-ID")}
+                                    {formatCurrency(service.price)}
                                 </Tag>
                                 <Tag icon={<ClockCircleOutlined />}>
                                     {service.duration_minutes} menit
