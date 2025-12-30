@@ -33,6 +33,7 @@ import { BookingDetail } from "./pages/Customer/BookingDetail";
 
 // Cleaner Pages
 import { CleanerBookings } from "./pages/Cleaner/Bookings";
+import { CleanerSchedule } from "./pages/Cleaner/Schedule";
 
 import "../css/app.css";
 
@@ -121,7 +122,7 @@ function App() {
                                     </ProtectedRoute>
                                 }
                             >
-                                <Route index element={<CleanerBookings />} />
+                                <Route index element={<CleanerSchedule />} />
                                 <Route
                                     path="bookings"
                                     element={<CleanerBookings />}

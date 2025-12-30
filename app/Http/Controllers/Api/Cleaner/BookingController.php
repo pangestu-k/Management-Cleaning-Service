@@ -132,4 +132,98 @@ class BookingController extends Controller
             'data' => $booking->load(['user', 'service', 'schedule']),
         ]);
     }
+
+    /**
+     * Get cleaner's schedule (bookings grouped by date)
+     * Returns dates with bookings and bookings for a specific date
+     */
+    public function schedule(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $cleaner = Cleaner::where('user_id', $user->id)->first();
+
+        if (!$cleaner) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Profil cleaner tidak ditemukan.',
+            ], 404);
+        }
+
+        $query = Booking::with(['user', 'service', 'schedule'])
+            ->forCleaner($cleaner->id)
+            ->whereIn('status', [
+                Booking::STATUS_APPROVED,
+                Booking::STATUS_ON_PROGRESS,
+                Booking::STATUS_COMPLETED,
+            ]);
+
+        // Filter by month/year
+        if ($request->has('month') && $request->has('year')) {
+            $month = $request->month;
+            $year = $request->year;
+            $query->whereHas('schedule', function ($q) use ($month, $year) {
+                $q->whereYear('date', $year)
+                    ->whereMonth('date', $month);
+            });
+        }
+
+        // Filter by specific date
+        if ($request->has('date')) {
+            $query->whereHas('schedule', function ($q) use ($request) {
+                $q->whereDate('date', $request->date);
+            });
+        }
+
+        $bookings = $query->get();
+
+        // Group bookings by date
+        $datesWithBookings = [];
+        $bookingsByDate = [];
+
+        foreach ($bookings as $booking) {
+            if ($booking->schedule) {
+                $date = $booking->schedule->date;
+                $dateKey = date('Y-m-d', strtotime($date));
+
+                // Track dates that have bookings
+                if (!in_array($dateKey, $datesWithBookings)) {
+                    $datesWithBookings[] = $dateKey;
+                }
+
+                // Group bookings by date
+                if (!isset($bookingsByDate[$dateKey])) {
+                    $bookingsByDate[$dateKey] = [];
+                }
+
+                $bookingsByDate[$dateKey][] = [
+                    'id' => $booking->id,
+                    'booking_code' => $booking->booking_code,
+                    'customer_name' => $booking->user->name,
+                    'service_name' => $booking->service->name,
+                    'start_time' => $booking->schedule->start_time,
+                    'end_time' => $booking->schedule->end_time,
+                    'address' => $booking->address,
+                    'status' => $booking->status,
+                    'total_price' => $booking->total_price,
+                ];
+            }
+        }
+
+        // Sort bookings by time for each date
+        foreach ($bookingsByDate as $date => &$dateBookings) {
+            usort($dateBookings, function ($a, $b) {
+                $timeA = strtotime($a['start_time']);
+                $timeB = strtotime($b['start_time']);
+                return $timeA <=> $timeB;
+            });
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'dates_with_bookings' => $datesWithBookings,
+                'bookings_by_date' => $bookingsByDate,
+            ],
+        ]);
+    }
 }

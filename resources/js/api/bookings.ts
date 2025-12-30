@@ -59,5 +59,36 @@ export const bookingsApi = {
             const response = await api.put<ApiResponse<Booking>>(`/cleaner/bookings/${id}/status`, { status });
             return response.data;
         },
+
+        getSchedule: async (params?: { month?: number; year?: number; date?: string }): Promise<ApiResponse<{
+            dates_with_bookings: string[];
+            bookings_by_date: Record<string, Array<{
+                id: number;
+                booking_code: string;
+                customer_name: string;
+                service_name: string;
+                start_time: string;
+                end_time: string;
+                address: string;
+                status: string;
+                total_price: number;
+            }>>;
+        }>> => {
+            const response = await api.get<ApiResponse<{
+                dates_with_bookings: string[];
+                bookings_by_date: Record<string, Array<{
+                    id: number;
+                    booking_code: string;
+                    customer_name: string;
+                    service_name: string;
+                    start_time: string;
+                    end_time: string;
+                    address: string;
+                    status: string;
+                    total_price: number;
+                }>>;
+            }>>('/cleaner/schedule', { params });
+            return response.data;
+        },
     },
 };

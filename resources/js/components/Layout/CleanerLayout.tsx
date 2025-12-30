@@ -92,7 +92,9 @@ export function CleanerLayout() {
                                     style={{ lineHeight: "normal" }}
                                 >
                                     <span>{item.icon}</span>
-                                    <span className="font-medium">{item.label}</span>
+                                    <span className="font-medium">
+                                        {item.label}
+                                    </span>
                                 </div>
                             );
                         })}

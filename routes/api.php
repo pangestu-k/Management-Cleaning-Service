@@ -66,6 +66,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Cleaner routes
     Route::middleware('role:cleaner')->prefix('cleaner')->group(function () {
+        // Schedule
+        Route::get('/schedule', [CleanerBookingController::class, 'schedule']);
+        
         // Assigned bookings
         Route::get('/bookings', [CleanerBookingController::class, 'index']);
         Route::get('/bookings/{id}', [CleanerBookingController::class, 'show']);
