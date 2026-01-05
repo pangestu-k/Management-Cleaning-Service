@@ -8,7 +8,7 @@
     @viteReactRefresh
     @vite(['resources/css/app.css', 'resources/js/app.tsx'])
 </head>
-<body style="height: 100%; margin: 0; padding: 0; overflow: hidden;">
-    <div id="app" style="height: 100%;"></div>
+<body style="height: 100%; margin: 0; padding: 0;">
+    <div id="app" style="min-height: 100%;"></div>
 </body>
 </html>

@@ -38,6 +38,7 @@ class Booking extends Model
     public const STATUS_ON_PROGRESS = 'on_progress';
     public const STATUS_COMPLETED = 'completed';
     public const STATUS_CANCELED = 'canceled';
+    public const STATUS_COMPLAINT = 'complaint';
 
     // Relationships
     public function user(): BelongsTo
@@ -94,6 +95,11 @@ class Booking extends Model
         return $this->status === self::STATUS_CANCELED;
     }
 
+    public function isComplaint(): bool
+    {
+        return $this->status === self::STATUS_COMPLAINT;
+    }
+
     // Get all valid statuses
     public static function getStatuses(): array
     {
@@ -103,6 +109,7 @@ class Booking extends Model
             self::STATUS_ON_PROGRESS,
             self::STATUS_COMPLETED,
             self::STATUS_CANCELED,
+            self::STATUS_COMPLAINT,
         ];
     }
 

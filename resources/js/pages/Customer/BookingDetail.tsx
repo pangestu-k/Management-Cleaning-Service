@@ -337,13 +337,22 @@ export function BookingDetail() {
                             <h3 className="text-lg font-semibold mb-2">
                                 Bukti Foto dari Cleaner
                             </h3>
-                            <Image
-                                src={`/storage/${booking.evidence_cleaner}`}
-                                alt="Evidence from cleaner"
-                                className="rounded border"
-                                style={{ maxHeight: 400 }}
-                                fallback="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMIAAADDCAYAAADQvc6UAAABRWlDQ1BJQ0MgUHJvZmlsZQAAKJFjYGASSSwoyGFhYGDIzSspCnJ3UoiIjFJgf8LAwSDCIMogwMCcmFxc4BgQ4ANUwgCjUcG3a0DVQHBH2A5M3xK5v1YChuXMe6HP4rWPqUwF85SilA9f/q5QPAVJFklAAUddHOvNQckQ3DYgqk0hAEZy2y2xDespIArH0C2o9CgJGmgoSuYtOeTgtEnzJGU6bi6tSge8T8yACDLZcngUHyS6Oo9hGyGjBb7lCT+AHQql3DVQ9g3SWA8C1UyM3DYEG7fIEDQ1QXxo1g+EFnGxYYkPAOcTtBSFhQW6QmNdTgOGUfYWJybjEwRKayFjiIh4yO8xIxylgrx9PMws6wM0r13UxT4D2YuQWJAzoHhJ0dBYlEi3AGM31iK04yNIGzu7QwMrNP+//scz4LA0kcb2D0//v7//+99///v8zYwMCvZWA4UAlgDhKvAbwKkKgAAAGxlWElmTU0AKgAAAAgABAEaAAUAAAABAAAAPgEbAAUAAAABAAAARgEoAAMAAAABAAIAAIdpAAQAAAABAAAATgAAAAAAAACQAAAAAQAAAJAAAAABAAKgAgAEAAAAAQAAAMKgAwAEAAAAAQAAAMKAAAAA"
-                            />
+                            <div className="w-full overflow-hidden">
+                                <Image
+                                    src={`/storage/${booking.evidence_cleaner}`}
+                                    alt="Evidence from cleaner"
+                                    className="rounded border w-full"
+                                    style={{
+                                        maxHeight: 400,
+                                        maxWidth: "100%",
+                                        objectFit: "contain",
+                                    }}
+                                    preview={{
+                                        mask: "Lihat Detail",
+                                    }}
+                                    fallback="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMIAAADDCAYAAADQvc6UAAABRWlDQ1BJQ0MgUHJvZmlsZQAAKJFjYGASSSwoyGFhYGDIzSspCnJ3UoiIjFJgf8LAwSDCIMogwMCcmFxc4BgQ4ANUwgCjUcG3a0DVQHBH2A5M3xK5v1YChuXMe6HP4rWPqUwF85SilA9f/q5QPAVJFklAAUddHOvNQckQ3DYgqk0hAEZy2y2xDespIArH0C2o9CgJGmgoSuYtOeTgtEnzJGU6bi6tSge8T8yACDLZcngUHyS6Oo9hGyGjBb7lCT+AHQql3DVQ9g3SWA8C1UyM3DYEG7fIEDQ1QXxo1g+EFnGxYYkPAOcTtBSFhQW6QmNdTgOGUfYWJybjEwRKayFjiIh4yO8xIxylgrx9PMws6wM0r13UxT4D2YuQWJAzoHhJ0dBYlEi3AGM31iK04yNIGzu7QwMrNP+//scz4LA0kcb2D0//v7//+99///v8zYwMCvZWA4UAlgDhKvAbwKkKgAAAGxlWElmTU0AKgAAAAgABAEaAAUAAAABAAAAPgEbAAUAAAABAAAARgEoAAMAAAABAAIAAIdpAAQAAAABAAAATgAAAAAAAACQAAAAAQAAAJAAAAABAAKgAgAEAAAAAQAAAMKgAwAEAAAAAQAAAMKAAAAA"
+                                />
+                            </div>
                         </div>
                     </>
                 )}
@@ -353,17 +362,24 @@ export function BookingDetail() {
                     <>
                         <Divider />
                         <div className="mb-4">
-                            <h3 className="text-lg font-semibold mb-2">
+                            <h3 className="text-lg font-semibold mb-3">
                                 Keluhan Pelanggan
                             </h3>
                             {booking.customer_complaint ? (
                                 <Card>
-                                    <div className="mb-3">
+                                    <div className="mb-3 w-full overflow-hidden">
                                         <Image
                                             src={`/storage/${booking.customer_complaint}`}
                                             alt="Complaint evidence"
-                                            className="rounded border"
-                                            style={{ maxHeight: 300 }}
+                                            className="rounded border w-full"
+                                            style={{
+                                                maxHeight: 300,
+                                                maxWidth: "100%",
+                                                objectFit: "contain",
+                                            }}
+                                            preview={{
+                                                mask: "Lihat Detail",
+                                            }}
                                             fallback="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMIAAADDCAYAAADQvc6UAAABRWlDQ1BJQ0MgUHJvZmlsZQAAKJFjYGASSSwoyGFhYGDIzSspCnJ3UoiIjFJgf8LAwSDCIMogwMCcmFxc4BgQ4ANUwgCjUcG3a0DVQHBH2A5M3xK5v1YChuXMe6HP4rWPqUwF85SilA9f/q5QPAVJFklAAUddHOvNQckQ3DYgqk0hAEZy2y2xDespIArH0C2o9CgJGmgoSuYtOeTgtEnzJGU6bi6tSge8T8yACDLZcngUHyS6Oo9hGyGjBb7lCT+AHQql3DVQ9g3SWA8C1UyM3DYEG7fIEDQ1QXxo1g+EFnGxYYkPAOcTtBSFhQW6QmNdTgOGUfYWJybjEwRKayFjiIh4yO8xIxylgrx9PMws6wM0r13UxT4D2YuQWJAzoHhJ0dBYlEi3AGM31iK04yNIGzu7QwMrNP+//scz4LA0kcb2D0//v7//+99///v8zYwMCvZWA4UAlgDhKvAbwKkKgAAAGxlWElmTU0AKgAAAAgABAEaAAUAAAABAAAAPgEbAAUAAAABAAAARgEoAAMAAAABAAIAAIdpAAQAAAABAAAATgAAAAAAAACQAAAAAQAAAJAAAAABAAKgAgAEAAAAAQAAAMKgAwAEAAAAAQAAAMKAAAAA"
                                         />
                                     </div>
@@ -392,6 +408,7 @@ export function BookingDetail() {
                                     <Button
                                         type="primary"
                                         danger
+                                        size="large"
                                         icon={<ExclamationCircleOutlined />}
                                         onClick={handleOpenComplaintModal}
                                     >
