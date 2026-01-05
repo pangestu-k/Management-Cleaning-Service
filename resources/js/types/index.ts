@@ -1,10 +1,22 @@
 // User types
+export interface ProfilePhoto {
+    id: number;
+    user_id: number;
+    file_path: string;
+    file_name: string;
+    mime_type: string;
+    file_size: number;
+    created_at: string;
+    updated_at: string;
+}
+
 export interface User {
     id: number;
     name: string;
     email: string;
     role: 'admin' | 'customer' | 'cleaner';
     email_verified_at?: string;
+    profile_photo?: ProfilePhoto;
     created_at: string;
     updated_at: string;
 }

@@ -12,13 +12,17 @@ import {
     Avatar,
     Tag,
     Spin,
+    Upload,
 } from "antd";
 import {
     UserOutlined,
     MailOutlined,
     LockOutlined,
     SaveOutlined,
+    UploadOutlined,
+    CameraOutlined,
 } from "@ant-design/icons";
+import type { UploadFile, UploadProps } from "antd/es/upload/interface";
 import { useAuth } from "../hooks/useAuth";
 import { authApi } from "../api/auth";
 
@@ -27,6 +31,8 @@ export function Profile() {
     const queryClient = useQueryClient();
     const [form] = Form.useForm();
     const [isEditing, setIsEditing] = useState(false);
+    const [fileList, setFileList] = useState<UploadFile[]>([]);
+    const [profilePhotoPreview, setProfilePhotoPreview] = useState<string | null>(null);
 
     // Show loading if auth is still loading or user is not loaded yet
     if (authLoading || !user) {
@@ -44,6 +50,8 @@ export function Profile() {
             queryClient.setQueryData(["auth", "me"], response);
             setIsEditing(false);
             form.resetFields();
+            setFileList([]);
+            setProfilePhotoPreview(null);
             
             // Update user in localStorage
             if (response.data?.user) {
@@ -74,6 +82,7 @@ export function Profile() {
             email?: string;
             password?: string;
             current_password?: string;
+            profile_photo?: File;
         } = {};
 
         if (values.name && values.name !== user?.name) {
@@ -86,6 +95,11 @@ export function Profile() {
             updateData.password = values.password;
             updateData.current_password = values.current_password;
         }
+        
+        // Include profile photo if uploaded
+        if (fileList.length > 0 && fileList[0].originFileObj) {
+            updateData.profile_photo = fileList[0].originFileObj;
+        }
 
         if (Object.keys(updateData).length === 0) {
             message.info("Tidak ada perubahan yang perlu disimpan.");
@@ -94,6 +108,53 @@ export function Profile() {
         }
 
         updateProfileMutation.mutate(updateData);
+    };
+
+    const handleUploadChange: UploadProps["onChange"] = (info) => {
+        let newFileList = [...info.fileList];
+
+        // Limit to 1 file
+        newFileList = newFileList.slice(-1);
+
+        // Validate file size (2MB)
+        newFileList = newFileList.map((file) => {
+            if (file.originFileObj) {
+                const isLt2M = file.originFileObj.size / 1024 / 1024 < 2;
+                if (!isLt2M) {
+                    message.error("Ukuran file maksimal 2MB!");
+                    return null;
+                }
+                
+                // Create preview
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    setProfilePhotoPreview(e.target?.result as string);
+                };
+                reader.readAsDataURL(file.originFileObj);
+            }
+            return file;
+        }).filter(Boolean) as UploadFile[];
+
+        setFileList(newFileList);
+    };
+
+    const uploadProps: UploadProps = {
+        beforeUpload: () => false, // Prevent auto upload
+        onChange: handleUploadChange,
+        fileList,
+        accept: "image/jpeg,image/jpg,image/png",
+        maxCount: 1,
+        showUploadList: false,
+    };
+
+    const getProfilePhotoUrl = () => {
+        if (profilePhotoPreview) {
+            return profilePhotoPreview;
+        }
+        if (user?.profile_photo?.file_path) {
+            return `/storage/${user.profile_photo.file_path}`;
+        }
+        return null;
     };
 
     return (
@@ -106,6 +167,7 @@ export function Profile() {
                         <div className="flex items-center gap-6 mb-6">
                             <Avatar
                                 size={80}
+                                src={getProfilePhotoUrl()}
                                 icon={<UserOutlined />}
                                 className="bg-blue-500"
                             />
@@ -182,6 +244,25 @@ export function Profile() {
                             email: user?.email,
                         }}
                     >
+                        <Form.Item label="Foto Profile">
+                            <div className="flex items-center gap-4">
+                                <Avatar
+                                    size={100}
+                                    src={getProfilePhotoUrl()}
+                                    icon={<UserOutlined />}
+                                    className="bg-blue-500"
+                                />
+                                <Upload {...uploadProps}>
+                                    <Button icon={<CameraOutlined />}>
+                                        {fileList.length > 0 ? "Ganti Foto" : "Upload Foto"}
+                                    </Button>
+                                </Upload>
+                            </div>
+                            <div className="text-gray-500 text-sm mt-2">
+                                Format: JPG, JPEG, atau PNG (Maks. 2MB)
+                            </div>
+                        </Form.Item>
+
                         <Form.Item
                             label="Nama"
                             name="name"
@@ -267,7 +348,14 @@ export function Profile() {
                                 >
                                     Simpan
                                 </Button>
-                                <Button onClick={() => setIsEditing(false)}>
+                                <Button 
+                                    onClick={() => {
+                                        setIsEditing(false);
+                                        setFileList([]);
+                                        setProfilePhotoPreview(null);
+                                        form.resetFields();
+                                    }}
+                                >
                                     Batal
                                 </Button>
                             </Space>

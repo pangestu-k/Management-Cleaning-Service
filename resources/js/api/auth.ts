@@ -31,8 +31,21 @@ export const authApi = {
         email?: string;
         password?: string;
         current_password?: string;
+        profile_photo?: File;
     }): Promise<ApiResponse<{ user: User }>> => {
-        const response = await api.put<ApiResponse<{ user: User }>>('/profile', data);
+        const formData = new FormData();
+        
+        if (data.name) formData.append('name', data.name);
+        if (data.email) formData.append('email', data.email);
+        if (data.password) formData.append('password', data.password);
+        if (data.current_password) formData.append('current_password', data.current_password);
+        if (data.profile_photo) formData.append('profile_photo', data.profile_photo);
+        
+        const response = await api.put<ApiResponse<{ user: User }>>('/profile', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
         return response.data;
     },
 };

@@ -27,6 +27,7 @@ class UpdateProfileRequest extends FormRequest
             ],
             'password' => ['sometimes', 'string', 'min:8', 'nullable'],
             'current_password' => ['required_with:password', 'string'],
+            'profile_photo' => ['sometimes', 'image', 'mimes:jpeg,jpg,png', 'max:2048'], // 2MB max
         ];
     }
 

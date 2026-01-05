@@ -106,6 +106,7 @@ export function CleanerLayout() {
                 >
                     <Avatar
                         className="cursor-pointer bg-white text-green-600 hover:bg-emerald-50 transition-colors"
+                        src={user?.profile_photo?.file_path ? `/storage/${user.profile_photo.file_path}` : undefined}
                         icon={<UserOutlined />}
                     />
                 </Dropdown>

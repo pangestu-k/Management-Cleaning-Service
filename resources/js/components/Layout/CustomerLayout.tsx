@@ -13,7 +13,7 @@ import type { MenuProps } from "antd";
 const { Header, Content, Footer } = Layout;
 
 export function CustomerLayout() {
-    const { logout } = useAuth();
+    const { logout, user } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
     const {
@@ -110,6 +110,7 @@ export function CustomerLayout() {
                 >
                     <Avatar
                         className="cursor-pointer bg-white text-blue-600"
+                        src={user?.profile_photo?.file_path ? `/storage/${user.profile_photo.file_path}` : undefined}
                         icon={<UserOutlined />}
                     />
                 </Dropdown>

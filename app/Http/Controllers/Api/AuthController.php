@@ -8,10 +8,12 @@ use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Requests\Auth\RegisterAdminRequest;
 use App\Http\Requests\Auth\UpdateProfileRequest;
 use App\Models\User;
+use App\Models\ProfilePhoto;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 class AuthController extends Controller
 {
@@ -115,6 +117,9 @@ class AuthController extends Controller
         if ($user->role === User::ROLE_CLEANER) {
             $user->load('cleaner');
         }
+        
+        // Always load profile photo
+        $user->load('profilePhoto');
 
         return response()->json([
             'success' => true,
@@ -157,11 +162,38 @@ class AuthController extends Controller
             $user->update($updateData);
         }
 
+        // Handle profile photo upload
+        if ($request->hasFile('profile_photo')) {
+            $file = $request->file('profile_photo');
+            
+            // Delete old profile photo if exists
+            $oldProfilePhoto = $user->profilePhoto;
+            if ($oldProfilePhoto && Storage::disk('public')->exists($oldProfilePhoto->file_path)) {
+                Storage::disk('public')->delete($oldProfilePhoto->file_path);
+            }
+
+            // Store new profile photo
+            $filename = 'profile_' . $user->id . '_' . time() . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('profile_photos', $filename, 'public');
+
+            // Update or create profile photo record
+            ProfilePhoto::updateOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'file_path' => $path,
+                    'file_name' => $file->getClientOriginalName(),
+                    'mime_type' => $file->getMimeType(),
+                    'file_size' => $file->getSize(),
+                ]
+            );
+        }
+
         // Reload user with relationships
         $user->refresh();
         if ($user->role === User::ROLE_CLEANER) {
             $user->load('cleaner');
         }
+        $user->load('profilePhoto');
 
         return response()->json([
             'success' => true,

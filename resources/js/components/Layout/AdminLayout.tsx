@@ -145,6 +145,7 @@ export function AdminLayout() {
                     >
                         <Avatar
                             className="cursor-pointer bg-blue-500"
+                            src={user?.profile_photo?.file_path ? `/storage/${user.profile_photo.file_path}` : undefined}
                             icon={<UserOutlined />}
                         />
                     </Dropdown>
