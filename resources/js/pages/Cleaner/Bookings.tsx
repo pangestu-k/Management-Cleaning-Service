@@ -110,22 +110,26 @@ export function CleanerBookings() {
             title: "Status",
             dataIndex: "status",
             key: "status",
+            width: 180,
             render: (status: string) => (
-                <Tag
-                    color={statusColors[status]}
-                    icon={
-                        status === "on_progress" ? (
-                            <SyncOutlined spin />
-                        ) : undefined
-                    }
-                >
-                    {statusLabels[status]}
-                </Tag>
+                <>
+                    <Tag
+                        color={statusColors[status]}
+                        icon={
+                            status === "on_progress" ? (
+                                <SyncOutlined spin />
+                            ) : undefined
+                        }
+                    >
+                        {statusLabels[status]}
+                    </Tag>
+                </>
             ),
         },
         {
             title: "Aksi",
             key: "action",
+            width: 150,
             render: (_, record) => {
                 if (record.status === "approved") {
                     return (
