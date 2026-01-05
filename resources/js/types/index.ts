@@ -90,6 +90,7 @@ export interface Booking {
     status: BookingStatus;
     evidence_cleaner?: string;
     customer_complaint?: string;
+    customer_complaint_desc?: string;
     total_price: number;
     user?: User;
     service?: Service;

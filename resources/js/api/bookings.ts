@@ -19,8 +19,16 @@ export const bookingsApi = {
             return response.data;
         },
 
-        submitComplaint: async (id: number, complaint: string): Promise<ApiResponse<Booking>> => {
-            const response = await api.post<ApiResponse<Booking>>(`/customer/bookings/${id}/complaint`, { customer_complaint: complaint });
+        submitComplaint: async (id: number, complaintImage: File, description: string): Promise<ApiResponse<Booking>> => {
+            const formData = new FormData();
+            formData.append('customer_complaint', complaintImage);
+            formData.append('customer_complaint_desc', description);
+            
+            const response = await api.post<ApiResponse<Booking>>(`/customer/bookings/${id}/complaint`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
             return response.data;
         },
     },
@@ -60,12 +68,19 @@ export const bookingsApi = {
             return response.data;
         },
 
-        updateStatus: async (id: number, status: 'on_progress' | 'completed', evidence?: string): Promise<ApiResponse<Booking>> => {
-            const payload: { status: string; evidence_cleaner?: string } = { status };
-            if (evidence) {
-                payload.evidence_cleaner = evidence;
+        updateStatus: async (id: number, status: 'on_progress' | 'completed', evidenceFile?: File): Promise<ApiResponse<Booking>> => {
+            const formData = new FormData();
+            formData.append('status', status);
+            
+            if (evidenceFile) {
+                formData.append('evidence_cleaner', evidenceFile);
             }
-            const response = await api.put<ApiResponse<Booking>>(`/cleaner/bookings/${id}/status`, payload);
+            
+            const response = await api.put<ApiResponse<Booking>>(`/cleaner/bookings/${id}/status`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
             return response.data;
         },
 

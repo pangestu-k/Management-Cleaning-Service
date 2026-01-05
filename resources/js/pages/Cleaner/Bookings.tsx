@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
     Table,
@@ -8,12 +9,18 @@ import {
     Popconfirm,
     Empty,
     Spin,
+    Modal,
+    Upload,
+    Form,
 } from "antd";
 import {
     SyncOutlined,
     CheckCircleOutlined,
     PlayCircleOutlined,
+    UploadOutlined,
+    DeleteOutlined,
 } from "@ant-design/icons";
+import type { UploadFile, UploadProps } from "antd/es/upload/interface";
 import { bookingsApi } from "../../api/bookings";
 import type { Booking } from "../../types";
 import type { ColumnsType } from "antd/es/table";
@@ -37,6 +44,10 @@ const statusLabels: Record<string, string> = {
 
 export function CleanerBookings() {
     const queryClient = useQueryClient();
+    const [evidenceModalOpen, setEvidenceModalOpen] = useState(false);
+    const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+    const [fileList, setFileList] = useState<UploadFile[]>([]);
+    const [form] = Form.useForm();
 
     const { data, isLoading } = useQuery({
         queryKey: ["cleaner-bookings"],
@@ -47,13 +58,19 @@ export function CleanerBookings() {
         mutationFn: ({
             id,
             status,
+            evidenceFile,
         }: {
             id: number;
             status: "on_progress" | "completed";
-        }) => bookingsApi.cleaner.updateStatus(id, status),
+            evidenceFile?: File;
+        }) => bookingsApi.cleaner.updateStatus(id, status, evidenceFile),
         onSuccess: () => {
             message.success("Status berhasil diperbarui");
             queryClient.invalidateQueries({ queryKey: ["cleaner-bookings"] });
+            setEvidenceModalOpen(false);
+            setFileList([]);
+            setSelectedBooking(null);
+            form.resetFields();
         },
         onError: (error: unknown) => {
             const err = error as { response?: { data?: { message?: string } } };
@@ -62,6 +79,74 @@ export function CleanerBookings() {
             );
         },
     });
+
+    const handleOpenEvidenceModal = (booking: Booking) => {
+        setSelectedBooking(booking);
+        setEvidenceModalOpen(true);
+        setFileList([]);
+        form.resetFields();
+    };
+
+    const handleCloseEvidenceModal = () => {
+        setEvidenceModalOpen(false);
+        setFileList([]);
+        setSelectedBooking(null);
+        form.resetFields();
+    };
+
+    const handleUploadChange: UploadProps["onChange"] = (info) => {
+        let newFileList = [...info.fileList];
+
+        // Limit to 1 file
+        newFileList = newFileList.slice(-1);
+
+        // Validate file size (2MB)
+        newFileList = newFileList.map((file) => {
+            if (file.originFileObj) {
+                const isLt2M = file.originFileObj.size / 1024 / 1024 < 2;
+                if (!isLt2M) {
+                    message.error("Ukuran file maksimal 2MB!");
+                    return null;
+                }
+            }
+            return file;
+        }).filter(Boolean) as UploadFile[];
+
+        setFileList(newFileList);
+    };
+
+    const handleSubmitEvidence = async () => {
+        if (fileList.length === 0) {
+            message.error("Silakan upload bukti foto terlebih dahulu");
+            return;
+        }
+
+        const file = fileList[0].originFileObj;
+        if (!file || !selectedBooking) return;
+
+        // Validate file type
+        const isValidType = ["image/jpeg", "image/jpg", "image/png"].includes(
+            file.type
+        );
+        if (!isValidType) {
+            message.error("Format file harus JPG, JPEG, atau PNG");
+            return;
+        }
+
+        updateStatusMutation.mutate({
+            id: selectedBooking.id,
+            status: "completed",
+            evidenceFile: file,
+        });
+    };
+
+    const uploadProps: UploadProps = {
+        beforeUpload: () => false, // Prevent auto upload
+        onChange: handleUploadChange,
+        fileList,
+        accept: "image/jpeg,image/jpg,image/png",
+        maxCount: 1,
+    };
 
     const columns: ColumnsType<Booking> = [
         {
@@ -156,26 +241,15 @@ export function CleanerBookings() {
                 }
                 if (record.status === "on_progress") {
                     return (
-                        <Popconfirm
-                            title="Tandai tugas ini selesai?"
-                            onConfirm={() =>
-                                updateStatusMutation.mutate({
-                                    id: record.id,
-                                    status: "completed",
-                                })
-                            }
-                            okText="Ya"
-                            cancelText="Batal"
+                        <Button
+                            type="primary"
+                            style={{ background: "#22c55e" }}
+                            icon={<CheckCircleOutlined />}
+                            loading={updateStatusMutation.isPending}
+                            onClick={() => handleOpenEvidenceModal(record)}
                         >
-                            <Button
-                                type="primary"
-                                style={{ background: "#22c55e" }}
-                                icon={<CheckCircleOutlined />}
-                                loading={updateStatusMutation.isPending}
-                            >
-                                Selesai
-                            </Button>
-                        </Popconfirm>
+                            Selesai
+                        </Button>
                     );
                 }
 
@@ -213,6 +287,74 @@ export function CleanerBookings() {
                     scroll={{ x: 900 }}
                 />
             )}
+
+            {/* Evidence Upload Modal */}
+            <Modal
+                title="Upload Bukti Foto Penyelesaian"
+                open={evidenceModalOpen}
+                onCancel={handleCloseEvidenceModal}
+                footer={null}
+                width={600}
+            >
+                <Form form={form} layout="vertical" onFinish={handleSubmitEvidence}>
+                    <Form.Item
+                        label="Upload Bukti Foto"
+                        required
+                        rules={[
+                            {
+                                validator: () => {
+                                    if (fileList.length === 0) {
+                                        return Promise.reject(
+                                            "Bukti foto wajib diupload"
+                                        );
+                                    }
+                                    return Promise.resolve();
+                                },
+                            },
+                        ]}
+                    >
+                        <Upload {...uploadProps} listType="picture-card">
+                            {fileList.length < 1 && (
+                                <div>
+                                    <UploadOutlined />
+                                    <div style={{ marginTop: 8 }}>Upload</div>
+                                </div>
+                            )}
+                        </Upload>
+                        <div className="text-gray-500 text-sm mt-2">
+                            Format: JPG, JPEG, atau PNG (Maks. 2MB)
+                        </div>
+                    </Form.Item>
+
+                    {fileList.length > 0 && (
+                        <div className="mb-4">
+                            <img
+                                src={URL.createObjectURL(
+                                    fileList[0].originFileObj as File
+                                )}
+                                alt="Preview"
+                                className="w-full max-h-64 object-contain rounded border"
+                            />
+                        </div>
+                    )}
+
+                    <Form.Item>
+                        <div className="flex justify-end gap-2">
+                            <Button onClick={handleCloseEvidenceModal}>
+                                Batal
+                            </Button>
+                            <Button
+                                type="primary"
+                                htmlType="submit"
+                                loading={updateStatusMutation.isPending}
+                                icon={<CheckCircleOutlined />}
+                            >
+                                Konfirmasi Selesai
+                            </Button>
+                        </div>
+                    </Form.Item>
+                </Form>
+            </Modal>
         </div>
     );
 }

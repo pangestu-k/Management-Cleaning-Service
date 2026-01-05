@@ -24,7 +24,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('bookings', function (Blueprint $table) {
-            $table->dropColumn(['evidence_cleaner', 'customer_complaint']);
+            $table->dropColumn(['evidence_cleaner', 'customer_complaint', 'customer_complaint_desc']);
         });
     }
 };

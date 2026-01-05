@@ -9,6 +9,7 @@ use App\Models\Booking;
 use App\Models\Cleaner;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class BookingController extends Controller
 {
@@ -123,23 +124,23 @@ class BookingController extends Controller
             ], 422);
         }
 
-        // If changing to completed, require evidence
-        if ($request->status === Booking::STATUS_COMPLETED) {
-            if (empty($booking->evidence_cleaner) && !$request->has('evidence_cleaner')) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Evidence wajib diupload terlebih dahulu sebelum menyelesaikan booking.',
-                ], 422);
-            }
-        }
-
         $updateData = [
             'status' => $request->status,
         ];
 
-        // If changing to completed and evidence is provided, save it
-        if ($request->status === Booking::STATUS_COMPLETED && $request->has('evidence_cleaner')) {
-            $updateData['evidence_cleaner'] = $request->evidence_cleaner;
+        // If changing to completed, handle evidence upload
+        if ($request->status === Booking::STATUS_COMPLETED && $request->hasFile('evidence_cleaner')) {
+            // Delete old evidence if exists
+            if ($booking->evidence_cleaner && \Storage::disk('public')->exists($booking->evidence_cleaner)) {
+                \Storage::disk('public')->delete($booking->evidence_cleaner);
+            }
+
+            // Store new evidence
+            $file = $request->file('evidence_cleaner');
+            $filename = 'evidence_' . $booking->id . '_' . time() . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('evidence', $filename, 'public');
+
+            $updateData['evidence_cleaner'] = $path;
         }
 
         $booking->update($updateData);

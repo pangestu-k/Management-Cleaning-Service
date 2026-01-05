@@ -11,6 +11,7 @@ use App\Models\Service;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class BookingController extends Controller
 {
@@ -172,9 +173,26 @@ class BookingController extends Controller
             ], 422);
         }
 
-        $booking->update([
-            'customer_complaint' => $request->customer_complaint,
-        ]);
+        $updateData = [
+            'customer_complaint_desc' => $request->customer_complaint_desc,
+        ];
+
+        // Handle complaint image upload
+        if ($request->hasFile('customer_complaint')) {
+            // Delete old complaint image if exists
+            if ($booking->customer_complaint && \Storage::disk('public')->exists($booking->customer_complaint)) {
+                \Storage::disk('public')->delete($booking->customer_complaint);
+            }
+
+            // Store new complaint image
+            $file = $request->file('customer_complaint');
+            $filename = 'complaint_' . $booking->id . '_' . time() . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('complaints', $filename, 'public');
+
+            $updateData['customer_complaint'] = $path;
+        }
+
+        $booking->update($updateData);
 
         return response()->json([
             'success' => true,

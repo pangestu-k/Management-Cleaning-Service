@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
     Card,
     Descriptions,
@@ -9,6 +10,12 @@ import {
     Empty,
     Space,
     Divider,
+    Form,
+    Input,
+    Upload,
+    Modal,
+    message,
+    Image,
 } from "antd";
 import {
     ArrowLeftOutlined,
@@ -19,7 +26,10 @@ import {
     UserOutlined,
     ToolOutlined,
     SyncOutlined,
+    UploadOutlined,
+    ExclamationCircleOutlined,
 } from "@ant-design/icons";
+import type { UploadFile, UploadProps } from "antd/es/upload/interface";
 import { bookingsApi } from "../../api/bookings";
 import { formatCurrency } from "../../utils/format";
 import dayjs from "dayjs";
@@ -43,12 +53,120 @@ const statusLabels: Record<string, string> = {
 export function BookingDetail() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
+    const queryClient = useQueryClient();
+    const [complaintModalOpen, setComplaintModalOpen] = useState(false);
+    const [fileList, setFileList] = useState<UploadFile[]>([]);
+    const [form] = Form.useForm();
 
     const { data, isLoading, error } = useQuery({
         queryKey: ["customer-booking", id],
         queryFn: () => bookingsApi.customer.getById(Number(id)),
         enabled: !!id,
     });
+
+    const submitComplaintMutation = useMutation({
+        mutationFn: ({
+            id: bookingId,
+            complaintImage,
+            description,
+        }: {
+            id: number;
+            complaintImage: File;
+            description: string;
+        }) =>
+            bookingsApi.customer.submitComplaint(
+                bookingId,
+                complaintImage,
+                description
+            ),
+        onSuccess: () => {
+            message.success(
+                "Keluhan berhasil dikirim. Admin akan meninjau keluhan Anda."
+            );
+            queryClient.invalidateQueries({
+                queryKey: ["customer-booking", id],
+            });
+            setComplaintModalOpen(false);
+            setFileList([]);
+            form.resetFields();
+        },
+        onError: (error: unknown) => {
+            const err = error as { response?: { data?: { message?: string } } };
+            message.error(
+                err.response?.data?.message || "Gagal mengirim keluhan"
+            );
+        },
+    });
+
+    const handleOpenComplaintModal = () => {
+        setComplaintModalOpen(true);
+        setFileList([]);
+        form.resetFields();
+    };
+
+    const handleCloseComplaintModal = () => {
+        setComplaintModalOpen(false);
+        setFileList([]);
+        form.resetFields();
+    };
+
+    const handleUploadChange: UploadProps["onChange"] = (info) => {
+        let newFileList = [...info.fileList];
+
+        // Limit to 1 file
+        newFileList = newFileList.slice(-1);
+
+        // Validate file size (2MB)
+        newFileList = newFileList
+            .map((file) => {
+                if (file.originFileObj) {
+                    const isLt2M = file.originFileObj.size / 1024 / 1024 < 2;
+                    if (!isLt2M) {
+                        message.error("Ukuran file maksimal 2MB!");
+                        return null;
+                    }
+                }
+                return file;
+            })
+            .filter(Boolean) as UploadFile[];
+
+        setFileList(newFileList);
+    };
+
+    const handleSubmitComplaint = async (values: {
+        customer_complaint_desc: string;
+    }) => {
+        if (fileList.length === 0) {
+            message.error("Silakan upload bukti foto terlebih dahulu");
+            return;
+        }
+
+        const file = fileList[0].originFileObj;
+        if (!file || !id) return;
+
+        // Validate file type
+        const isValidType = ["image/jpeg", "image/jpg", "image/png"].includes(
+            file.type
+        );
+        if (!isValidType) {
+            message.error("Format file harus JPG, JPEG, atau PNG");
+            return;
+        }
+
+        submitComplaintMutation.mutate({
+            id: Number(id),
+            complaintImage: file,
+            description: values.customer_complaint_desc,
+        });
+    };
+
+    const uploadProps: UploadProps = {
+        beforeUpload: () => false, // Prevent auto upload
+        onChange: handleUploadChange,
+        fileList,
+        accept: "image/jpeg,image/jpg,image/png",
+        maxCount: 1,
+    };
 
     if (isLoading) {
         return (
@@ -211,6 +329,80 @@ export function BookingDetail() {
                     </Descriptions.Item>
                 </Descriptions>
 
+                {/* Evidence from Cleaner */}
+                {booking.evidence_cleaner && (
+                    <>
+                        <Divider />
+                        <div className="mb-4">
+                            <h3 className="text-lg font-semibold mb-2">
+                                Bukti Foto dari Cleaner
+                            </h3>
+                            <Image
+                                src={`/storage/${booking.evidence_cleaner}`}
+                                alt="Evidence from cleaner"
+                                className="rounded border"
+                                style={{ maxHeight: 400 }}
+                                fallback="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMIAAADDCAYAAADQvc6UAAABRWlDQ1BJQ0MgUHJvZmlsZQAAKJFjYGASSSwoyGFhYGDIzSspCnJ3UoiIjFJgf8LAwSDCIMogwMCcmFxc4BgQ4ANUwgCjUcG3a0DVQHBH2A5M3xK5v1YChuXMe6HP4rWPqUwF85SilA9f/q5QPAVJFklAAUddHOvNQckQ3DYgqk0hAEZy2y2xDespIArH0C2o9CgJGmgoSuYtOeTgtEnzJGU6bi6tSge8T8yACDLZcngUHyS6Oo9hGyGjBb7lCT+AHQql3DVQ9g3SWA8C1UyM3DYEG7fIEDQ1QXxo1g+EFnGxYYkPAOcTtBSFhQW6QmNdTgOGUfYWJybjEwRKayFjiIh4yO8xIxylgrx9PMws6wM0r13UxT4D2YuQWJAzoHhJ0dBYlEi3AGM31iK04yNIGzu7QwMrNP+//scz4LA0kcb2D0//v7//+99///v8zYwMCvZWA4UAlgDhKvAbwKkKgAAAGxlWElmTU0AKgAAAAgABAEaAAUAAAABAAAAPgEbAAUAAAABAAAARgEoAAMAAAABAAIAAIdpAAQAAAABAAAATgAAAAAAAACQAAAAAQAAAJAAAAABAAKgAgAEAAAAAQAAAMKgAwAEAAAAAQAAAMKAAAAA"
+                            />
+                        </div>
+                    </>
+                )}
+
+                {/* Customer Complaint */}
+                {booking.status === "completed" && (
+                    <>
+                        <Divider />
+                        <div className="mb-4">
+                            <h3 className="text-lg font-semibold mb-2">
+                                Keluhan Pelanggan
+                            </h3>
+                            {booking.customer_complaint ? (
+                                <Card>
+                                    <div className="mb-3">
+                                        <Image
+                                            src={`/storage/${booking.customer_complaint}`}
+                                            alt="Complaint evidence"
+                                            className="rounded border"
+                                            style={{ maxHeight: 300 }}
+                                            fallback="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMIAAADDCAYAAADQvc6UAAABRWlDQ1BJQ0MgUHJvZmlsZQAAKJFjYGASSSwoyGFhYGDIzSspCnJ3UoiIjFJgf8LAwSDCIMogwMCcmFxc4BgQ4ANUwgCjUcG3a0DVQHBH2A5M3xK5v1YChuXMe6HP4rWPqUwF85SilA9f/q5QPAVJFklAAUddHOvNQckQ3DYgqk0hAEZy2y2xDespIArH0C2o9CgJGmgoSuYtOeTgtEnzJGU6bi6tSge8T8yACDLZcngUHyS6Oo9hGyGjBb7lCT+AHQql3DVQ9g3SWA8C1UyM3DYEG7fIEDQ1QXxo1g+EFnGxYYkPAOcTtBSFhQW6QmNdTgOGUfYWJybjEwRKayFjiIh4yO8xIxylgrx9PMws6wM0r13UxT4D2YuQWJAzoHhJ0dBYlEi3AGM31iK04yNIGzu7QwMrNP+//scz4LA0kcb2D0//v7//+99///v8zYwMCvZWA4UAlgDhKvAbwKkKgAAAGxlWElmTU0AKgAAAAgABAEaAAUAAAABAAAAPgEbAAUAAAABAAAARgEoAAMAAAABAAIAAIdpAAQAAAABAAAATgAAAAAAAACQAAAAAQAAAJAAAAABAAKgAgAEAAAAAQAAAMKgAwAEAAAAAQAAAMKAAAAA"
+                                        />
+                                    </div>
+                                    {booking.customer_complaint_desc && (
+                                        <div className="mt-3">
+                                            <p className="text-gray-700 whitespace-pre-wrap">
+                                                {
+                                                    booking.customer_complaint_desc
+                                                }
+                                            </p>
+                                        </div>
+                                    )}
+                                    <Tag color="orange" className="mt-2">
+                                        Keluhan telah dikirim, menunggu tinjauan
+                                        admin
+                                    </Tag>
+                                </Card>
+                            ) : (
+                                <Card>
+                                    <p className="text-gray-600 mb-4">
+                                        Jika Anda tidak puas dengan hasil
+                                        pekerjaan, silakan ajukan keluhan dengan
+                                        mengupload bukti foto dan deskripsi
+                                        keluhan.
+                                    </p>
+                                    <Button
+                                        type="primary"
+                                        danger
+                                        icon={<ExclamationCircleOutlined />}
+                                        onClick={handleOpenComplaintModal}
+                                    >
+                                        Ajukan Keluhan
+                                    </Button>
+                                </Card>
+                            )}
+                        </div>
+                    </>
+                )}
+
                 <Divider />
 
                 <div className="flex justify-end gap-2">
@@ -227,7 +419,102 @@ export function BookingDetail() {
                     )}
                 </div>
             </Card>
+
+            {/* Complaint Modal */}
+            <Modal
+                title="Ajukan Keluhan"
+                open={complaintModalOpen}
+                onCancel={handleCloseComplaintModal}
+                footer={null}
+                width={700}
+            >
+                <Form
+                    form={form}
+                    layout="vertical"
+                    onFinish={handleSubmitComplaint}
+                >
+                    <Form.Item
+                        label="Upload Bukti Foto Keluhan"
+                        name="customer_complaint"
+                        required
+                        rules={[
+                            {
+                                validator: () => {
+                                    if (fileList.length === 0) {
+                                        return Promise.reject(
+                                            "Bukti foto keluhan wajib diupload"
+                                        );
+                                    }
+                                    return Promise.resolve();
+                                },
+                            },
+                        ]}
+                    >
+                        <Upload {...uploadProps} listType="picture-card">
+                            {fileList.length < 1 && (
+                                <div>
+                                    <UploadOutlined />
+                                    <div style={{ marginTop: 8 }}>Upload</div>
+                                </div>
+                            )}
+                        </Upload>
+                        <div className="text-gray-500 text-sm mt-2">
+                            Format: JPG, JPEG, atau PNG (Maks. 2MB)
+                        </div>
+                    </Form.Item>
+
+                    {fileList.length > 0 && (
+                        <div className="mb-4">
+                            <Image
+                                src={URL.createObjectURL(
+                                    fileList[0].originFileObj as File
+                                )}
+                                alt="Preview"
+                                className="w-full max-h-64 object-contain rounded border"
+                            />
+                        </div>
+                    )}
+
+                    <Form.Item
+                        label="Deskripsi Keluhan"
+                        name="customer_complaint_desc"
+                        rules={[
+                            {
+                                required: true,
+                                message: "Deskripsi keluhan wajib diisi",
+                            },
+                            {
+                                min: 10,
+                                message: "Deskripsi minimal 10 karakter",
+                            },
+                        ]}
+                    >
+                        <Input.TextArea
+                            rows={6}
+                            placeholder="Jelaskan keluhan Anda secara detail (minimal 10 karakter)..."
+                            showCount
+                            maxLength={500}
+                        />
+                    </Form.Item>
+
+                    <Form.Item>
+                        <div className="flex justify-end gap-2">
+                            <Button onClick={handleCloseComplaintModal}>
+                                Batal
+                            </Button>
+                            <Button
+                                type="primary"
+                                danger
+                                htmlType="submit"
+                                loading={submitComplaintMutation.isPending}
+                                icon={<ExclamationCircleOutlined />}
+                            >
+                                Kirim Keluhan
+                            </Button>
+                        </div>
+                    </Form.Item>
+                </Form>
+            </Modal>
         </div>
     );
 }
-
