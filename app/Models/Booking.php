@@ -20,6 +20,7 @@ class Booking extends Model
         'evidence_cleaner',
         'customer_complaint',
         'total_price',
+        'customer_complaint_desc'
     ];
 
     public $incrementing = false;

@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::table('bookings', function (Blueprint $table) {
             $table->text('evidence_cleaner')->nullable()->after('status');
             $table->text('customer_complaint')->nullable()->after('evidence_cleaner');
+            $table->text('customer_complaint_desc')->nullable();
         });
     }
 
