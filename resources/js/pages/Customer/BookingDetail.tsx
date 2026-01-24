@@ -77,11 +77,11 @@ export function BookingDetail() {
             bookingsApi.customer.submitComplaint(
                 bookingId,
                 complaintImage,
-                description
+                description,
             ),
         onSuccess: () => {
             message.success(
-                "Keluhan berhasil dikirim. Admin akan meninjau keluhan Anda."
+                "Keluhan berhasil dikirim. Admin akan meninjau keluhan Anda.",
             );
             queryClient.invalidateQueries({
                 queryKey: ["customer-booking", id],
@@ -93,7 +93,7 @@ export function BookingDetail() {
         onError: (error: unknown) => {
             const err = error as { response?: { data?: { message?: string } } };
             message.error(
-                err.response?.data?.message || "Gagal mengirim keluhan"
+                err.response?.data?.message || "Gagal mengirim keluhan",
             );
         },
     });
@@ -146,7 +146,7 @@ export function BookingDetail() {
 
         // Validate file type
         const isValidType = ["image/jpeg", "image/jpg", "image/png"].includes(
-            file.type
+            file.type,
         );
         if (!isValidType) {
             message.error("Format file harus JPG, JPEG, atau PNG");
@@ -268,7 +268,7 @@ export function BookingDetail() {
                     >
                         {booking.schedule?.date
                             ? dayjs(booking.schedule.date).format(
-                                  "dddd, DD MMMM YYYY"
+                                  "dddd, DD MMMM YYYY",
                               )
                             : "-"}
                     </Descriptions.Item>
@@ -324,7 +324,7 @@ export function BookingDetail() {
 
                     <Descriptions.Item label="Tanggal Pemesanan" span={2}>
                         {dayjs(booking.created_at).format(
-                            "dddd, DD MMMM YYYY HH:mm"
+                            "dddd, DD MMMM YYYY HH:mm",
                         )}
                     </Descriptions.Item>
                 </Descriptions>
@@ -398,23 +398,24 @@ export function BookingDetail() {
                                     </Tag>
                                 </Card>
                             ) : (
-                                <Card>
-                                    <p className="text-gray-600 mb-4">
-                                        Jika Anda tidak puas dengan hasil
-                                        pekerjaan, silakan ajukan keluhan dengan
-                                        mengupload bukti foto dan deskripsi
-                                        keluhan.
-                                    </p>
-                                    <Button
-                                        type="primary"
-                                        danger
-                                        size="large"
-                                        icon={<ExclamationCircleOutlined />}
-                                        onClick={handleOpenComplaintModal}
-                                    >
-                                        Ajukan Keluhan
-                                    </Button>
-                                </Card>
+                                // <Card>
+                                //     <p className="text-gray-600 mb-4">
+                                //         Jika Anda tidak puas dengan hasil
+                                //         pekerjaan, silakan ajukan keluhan dengan
+                                //         mengupload bukti foto dan deskripsi
+                                //         keluhan.
+                                //     </p>
+                                //     <Button
+                                //         type="primary"
+                                //         danger
+                                //         size="large"
+                                //         icon={<ExclamationCircleOutlined />}
+                                //         onClick={handleOpenComplaintModal}
+                                //     >
+                                //         Ajukan Keluhan
+                                //     </Button>
+                                // </Card>
+                                <></>
                             )}
                         </div>
                     </>
@@ -459,7 +460,7 @@ export function BookingDetail() {
                                 validator: () => {
                                     if (fileList.length === 0) {
                                         return Promise.reject(
-                                            "Bukti foto keluhan wajib diupload"
+                                            "Bukti foto keluhan wajib diupload",
                                         );
                                     }
                                     return Promise.resolve();
@@ -484,7 +485,7 @@ export function BookingDetail() {
                         <div className="mb-4">
                             <Image
                                 src={URL.createObjectURL(
-                                    fileList[0].originFileObj as File
+                                    fileList[0].originFileObj as File,
                                 )}
                                 alt="Preview"
                                 className="w-full max-h-64 object-contain rounded border"
